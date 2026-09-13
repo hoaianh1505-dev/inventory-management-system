@@ -20,7 +20,7 @@ export class User {
   password: string;
 
   @Column({ type: "varchar", length: 100, nullable: true })
-  email: string;
+  email: string | null;
 
   @Column({
     type: "enum",
