@@ -3,6 +3,7 @@ import { User } from "../entities/User";
 import { UserRole } from "../constants";
 import { hashPassword, comparePassword } from "../utils/password.util";
 import { LoginInput, ChangePasswordInput } from "../validations/auth.validation";
+import { AppError } from "../utils/appError.util";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -33,25 +34,16 @@ export const loginService = async (input: LoginInput) => {
   });
 
   if (!user) {
-    const error: any = new Error("Tên đăng nhập hoặc mật khẩu không đúng");
-    error.statusCode = 401;
-    error.code = "UNAUTHORIZED";
-    throw error;
+    throw new AppError("Tên đăng nhập hoặc mật khẩu không đúng", 401, "UNAUTHORIZED");
   }
 
   if (!user.is_active) {
-    const error: any = new Error("Tài khoản đã bị khóa");
-    error.statusCode = 403;
-    error.code = "ACCOUNT_DISABLED";
-    throw error;
+    throw new AppError("Tài khoản đã bị khóa", 403, "ACCOUNT_DISABLED");
   }
 
   const isPasswordValid = await comparePassword(input.password, user.password);
   if (!isPasswordValid) {
-    const error: any = new Error("Tên đăng nhập hoặc mật khẩu không đúng");
-    error.statusCode = 401;
-    error.code = "UNAUTHORIZED";
-    throw error;
+    throw new AppError("Tên đăng nhập hoặc mật khẩu không đúng", 401, "UNAUTHORIZED");
   }
 
   return {
@@ -70,10 +62,7 @@ export const getMeService = async (userId: string) => {
   });
 
   if (!user) {
-    const error: any = new Error("Người dùng không tồn tại");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Người dùng không tồn tại", 404, "NOT_FOUND");
   }
 
   return user;
@@ -88,18 +77,12 @@ export const changePasswordService = async (
   });
 
   if (!user) {
-    const error: any = new Error("Người dùng không tồn tại");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Người dùng không tồn tại", 404, "NOT_FOUND");
   }
 
   const isOldPasswordValid = await comparePassword(input.old_password, user.password);
   if (!isOldPasswordValid) {
-    const error: any = new Error("Mật khẩu cũ không đúng");
-    error.statusCode = 400;
-    error.code = "INVALID_PASSWORD";
-    throw error;
+    throw new AppError("Mật khẩu cũ không đúng", 400, "INVALID_PASSWORD");
   }
 
   user.password = await hashPassword(input.new_password);

@@ -7,6 +7,7 @@ import {
   QueryUserInput,
 } from "../validations/user.validation";
 import { ILike } from "typeorm";
+import { AppError } from "../utils/appError.util";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -16,10 +17,7 @@ export const createUserService = async (input: CreateUserInput) => {
   });
 
   if (existingUser) {
-    const error: any = new Error("Tên đăng nhập đã tồn tại");
-    error.statusCode = 409;
-    error.code = "DUPLICATE_USERNAME";
-    throw error;
+    throw new AppError("Tên đăng nhập đã tồn tại", 409, "DUPLICATE_USERNAME");
   }
 
   const tempPassword = generateTempPassword(8);
@@ -93,10 +91,7 @@ export const getUserByIdService = async (id: string) => {
   });
 
   if (!user) {
-    const error: any = new Error("Không tìm thấy người dùng");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Không tìm thấy người dùng", 404, "NOT_FOUND");
   }
 
   return user;
@@ -108,10 +103,7 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
   });
 
   if (!user) {
-    const error: any = new Error("Không tìm thấy người dùng");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Không tìm thấy người dùng", 404, "NOT_FOUND");
   }
 
   if (input.email !== undefined) user.email = input.email || null;
@@ -136,10 +128,7 @@ export const resetPasswordService = async (id: string) => {
   });
 
   if (!user) {
-    const error: any = new Error("Không tìm thấy người dùng");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Không tìm thấy người dùng", 404, "NOT_FOUND");
   }
 
   const newTempPassword = generateTempPassword(8);
@@ -160,10 +149,7 @@ export const deleteUserService = async (id: string) => {
   });
 
   if (!user) {
-    const error: any = new Error("Không tìm thấy người dùng");
-    error.statusCode = 404;
-    error.code = "NOT_FOUND";
-    throw error;
+    throw new AppError("Không tìm thấy người dùng", 404, "NOT_FOUND");
   }
 
   await userRepository.softDelete(id);
