@@ -8,16 +8,16 @@ const categoryRepository = AppDataSource.getRepository(Category);
 
 export const getCategoriesService = async (tree: boolean = false) => {
   if (tree) {
-    // Lay danh sach dang cay (chi lay nhung thang goc parent_id IS NULL)
+    // Lấy danh sách dạng cây lồng đa cấp (Ông -> Cha -> Cháu)
     const rootCategories = await categoryRepository.find({
       where: { parent_id: IsNull() },
-      relations: ["children"],
+      relations: ["children", "children.children"],
       order: { created_at: "ASC" },
     });
     return rootCategories;
   }
 
-  // Lay danh sach phang (flat list)
+  // Lấy danh sách phẳng (flat list)
   const categories = await categoryRepository.find({
     relations: ["parent"],
     order: { created_at: "ASC" },

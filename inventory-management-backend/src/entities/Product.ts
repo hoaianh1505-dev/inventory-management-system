@@ -26,10 +26,10 @@ export class Product {
   sku: string;
 
   @Column({ type: "varchar", length: 100, unique: true, nullable: true })
-  barcode: string;
+  barcode: string | null;
 
   @Column({ type: "text", nullable: true })
-  description: string;
+  description: string | null;
 
   @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
   cost_price: number;
@@ -41,21 +41,21 @@ export class Product {
   low_stock_threshold: number;
 
   @Column({ type: "uuid", nullable: true })
-  category_id: string;
+  category_id: string | null;
 
   @ManyToOne(() => Category, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "category_id" })
   category: Category;
 
   @Column({ type: "uuid", nullable: true })
-  unit_id: string;
+  unit_id: string | null;
 
   @ManyToOne(() => Unit, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "unit_id" })
   unit: Unit;
 
   @Column({ type: "uuid", nullable: true })
-  supplier_id: string;
+  supplier_id: string | null;
 
   @ManyToOne(() => Supplier, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "supplier_id" })

@@ -24,7 +24,7 @@ export const errorHandler = (
   const code = err.code || "INTERNAL_ERROR";
   const message = err.message || "Lỗi server không xác định";
 
-  // Neu la loi server 5xx (loi he thong khong mong muon), log loi ra console de debug
+  // Lỗi này do server ném ra nah
   if (statusCode >= 500) {
     console.error("[SYSTEM_ERROR]", err);
   }
