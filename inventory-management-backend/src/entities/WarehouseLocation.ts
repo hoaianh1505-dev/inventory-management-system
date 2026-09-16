@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Warehouse } from "./Warehouse";
 
+
 @Entity("warehouse_locations")
 export class WarehouseLocation {
   @PrimaryGeneratedColumn("uuid")
@@ -30,7 +31,7 @@ export class WarehouseLocation {
   name: string;
 
   @Column({ type: "text", nullable: true })
-  description: string;
+  description: string | null;
 
   @CreateDateColumn()
   created_at: Date;

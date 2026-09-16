@@ -23,14 +23,14 @@ export class Warehouse {
   code: string;
 
   @Column({ type: "text", nullable: true })
-  address: string;
+  address: string | null;
 
   @Column({ type: "uuid", nullable: true })
-  manager_id: string;
+  manager_id: string | null;
 
   @ManyToOne(() => User, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "manager_id" })
-  manager: User;
+  manager: User | null;
 
   @Column({ type: "boolean", default: true })
   is_active: boolean;

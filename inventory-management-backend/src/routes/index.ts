@@ -5,6 +5,7 @@ import categoryRouter from "./category.route";
 import unitRouter from "./unit.route";
 import supplierRouter from "./supplier.route";
 import productRouter from "./product.route";
+import warehouseRouter from "./warehouse.route";
 import { getRoles } from "../controllers/user.controller";
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware";
 import { UserRole } from "../constants";
@@ -18,6 +19,7 @@ apiV1Router.use("/categories", categoryRouter);
 apiV1Router.use("/units", unitRouter);
 apiV1Router.use("/suppliers", supplierRouter);
 apiV1Router.use("/products", productRouter);
+apiV1Router.use("/warehouses", warehouseRouter);
 apiV1Router.get("/roles", authenticateJWT, authorizeRoles(UserRole.ADMIN), getRoles);
 
 router.use("/api/v1", apiV1Router);
