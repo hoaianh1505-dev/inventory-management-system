@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { loginSchema, changePasswordSchema } from "../validations/auth.validation";
+import { loginSchema, changePasswordSchema, updateProfileSchema } from "../validations/auth.validation";
 import {
   loginService,
   getMeService,
   changePasswordService,
+  updateProfileService,
 } from "../services/auth.service";
 import {
   generateAccessToken,
@@ -111,6 +112,21 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     return res.status(200).json({
       success: true,
       data: { message: "Cấp lại access token thành công" },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const validatedInput = updateProfileSchema.parse(req.body);
+    const result = await updateProfileService(userId, validatedInput);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     next(error);

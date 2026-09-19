@@ -4,6 +4,7 @@ import {
   logout,
   getMe,
   changePassword,
+  updateProfile,
   refresh,
 } from "../controllers/auth.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
@@ -16,5 +17,6 @@ router.post("/refresh", refresh);
 router.post("/logout", authenticateJWT, logout);
 router.get("/me", authenticateJWT, getMe);
 router.patch("/change-password", authenticateJWT, changePassword);
+router.patch("/profile", authenticateJWT, updateProfile);
 
 export default router;

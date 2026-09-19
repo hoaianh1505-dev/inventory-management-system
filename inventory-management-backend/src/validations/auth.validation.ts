@@ -10,5 +10,11 @@ export const changePasswordSchema = z.object({
   new_password: z.string().min(6, "Mật khẩu mới phải có ít nhất 6 ký tự"),
 });
 
+export const updateProfileSchema = z.object({
+  email: z.string().email("Email không đúng định dạng").optional().or(z.literal("")),
+  avatar: z.string().url("URL ảnh đại diện không hợp lệ").optional().or(z.literal("")),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

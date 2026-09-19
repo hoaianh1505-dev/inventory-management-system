@@ -26,6 +26,7 @@ export const createUserService = async (input: CreateUserInput) => {
   const newUser = userRepository.create({
     username: input.username,
     email: input.email || null,
+    avatar: input.avatar || null,
     password: hashedPassword,
     role: input.role,
     must_change_password: true,
@@ -39,6 +40,7 @@ export const createUserService = async (input: CreateUserInput) => {
       id: newUser.id,
       username: newUser.username,
       email: newUser.email,
+      avatar: newUser.avatar,
       role: newUser.role,
       must_change_password: newUser.must_change_password,
       is_active: newUser.is_active,
@@ -68,7 +70,7 @@ export const getUsersService = async (query: QueryUserInput) => {
 
   const [users, total] = await userRepository.findAndCount({
     where: whereClause,
-    select: ["id", "username", "email", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
     order: { created_at: "DESC" },
     skip,
     take: limit,
@@ -87,7 +89,7 @@ export const getUsersService = async (query: QueryUserInput) => {
 export const getUserByIdService = async (id: string) => {
   const user = await userRepository.findOne({
     where: { id },
-    select: ["id", "username", "email", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
   });
 
   if (!user) {
@@ -107,6 +109,7 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
   }
 
   if (input.email !== undefined) user.email = input.email || null;
+  if (input.avatar !== undefined) user.avatar = input.avatar || null;
   if (input.role !== undefined) user.role = input.role;
   if (input.is_active !== undefined) user.is_active = input.is_active;
 
@@ -116,6 +119,7 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
     id: user.id,
     username: user.username,
     email: user.email,
+    avatar: user.avatar,
     role: user.role,
     is_active: user.is_active,
     updated_at: user.updated_at,

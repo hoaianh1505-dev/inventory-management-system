@@ -25,7 +25,7 @@ export class Inventory {
   warehouse: Warehouse;
 
   @Column({ type: "uuid", nullable: true })
-  location_id: string;
+  location_id: string | null;
 
   @ManyToOne(() => WarehouseLocation, { onDelete: "SET NULL", nullable: true })
   @JoinColumn({ name: "location_id" })

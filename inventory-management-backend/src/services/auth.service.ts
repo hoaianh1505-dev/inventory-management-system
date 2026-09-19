@@ -2,7 +2,7 @@ import { AppDataSource } from "../config/database";
 import { User } from "../entities/User";
 import { UserRole } from "../constants";
 import { hashPassword, comparePassword } from "../utils/password.util";
-import { LoginInput, ChangePasswordInput } from "../validations/auth.validation";
+import { LoginInput, ChangePasswordInput, UpdateProfileInput } from "../validations/auth.validation";
 import { AppError } from "../utils/appError.util";
 
 const userRepository = AppDataSource.getRepository(User);
@@ -50,6 +50,7 @@ export const loginService = async (input: LoginInput) => {
     id: user.id,
     username: user.username,
     email: user.email,
+    avatar: user.avatar,
     role: user.role,
     must_change_password: user.must_change_password,
   };
@@ -58,7 +59,7 @@ export const loginService = async (input: LoginInput) => {
 export const getMeService = async (userId: string) => {
   const user = await userRepository.findOne({
     where: { id: userId },
-    select: ["id", "username", "email", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
   });
 
   if (!user) {
@@ -90,4 +91,31 @@ export const changePasswordService = async (
   await userRepository.save(user);
 
   return { message: "Đổi mật khẩu thành công" };
+};
+
+export const updateProfileService = async (
+  userId: string,
+  input: UpdateProfileInput
+) => {
+  const user = await userRepository.findOne({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new AppError("Người dùng không tồn tại", 404, "NOT_FOUND");
+  }
+
+  if (input.email !== undefined) user.email = input.email || null;
+  if (input.avatar !== undefined) user.avatar = input.avatar || null;
+
+  await userRepository.save(user);
+
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    role: user.role,
+    updated_at: user.updated_at,
+  };
 };
