@@ -1,3 +1,7 @@
+import fs from "fs";
+import path from "path";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -14,6 +18,12 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
+const swaggerPath = fs.existsSync(path.join(__dirname, "docs/swagger.yaml"))
+  ? path.join(__dirname, "docs/swagger.yaml")
+  : path.join(process.cwd(), "src/docs/swagger.yaml");
+
+const swaggerDocument = YAML.load(swaggerPath);
+
 // Security Middlewares
 app.use(helmet());
 app.use(cors(corsOptions));
@@ -23,6 +33,9 @@ app.use(globalRateLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Swagger API Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Application Routes & Error Handling
 app.use(routes);

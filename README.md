@@ -24,7 +24,7 @@ Backend được xây dựng theo chuẩn **Layered Architecture** (`Route` ➔ 
 * **Database & ORM:** TypeORM (PostgreSQL / MySQL)
 * **Validation & Security:** Zod, JWT (HttpOnly Cookie), BcryptJS, Helmet, CORS, Rate Limit
 
-### Danh Sách Module Backend Đã Triển Khai (9/13 Modules)
+### Danh Sách Module Backend Đã Triển Khai (13/13 Modules - Hoàn Thành 100%)
 * [x] **Auth:** Đăng nhập, Đăng xuất, Refresh Token Cookie, Đổi mật khẩu, Profile & Avatar.
 * [x] **Users:** Quản lý tài khoản & Phân quyền (`ADMIN`, `WAREHOUSE_MANAGER`, `STAFF`).
 * [x] **Categories:** Quản lý danh mục sản phẩm.
@@ -34,10 +34,10 @@ Backend được xây dựng theo chuẩn **Layered Architecture** (`Route` ➔ 
 * [x] **Warehouses:** Quản lý Nhà kho & Vị trí kho chi tiết (Kệ, Hàng).
 * [x] **Stock Transactions:** Giao dịch Nhập kho, Xuất kho, Chuyển kho (Sử dụng Database Transaction).
 * [x] **Inventory:** Tra cứu tồn kho thực tế, Cảnh báo tồn kho thấp (`low-stock`), Chi tiết sản phẩm.
-* [ ] **Dashboard:** Thống kê tổng quan & Biểu đồ nhập xuất (*Sắp triển khai*).
-* [ ] **Export/Import Excel:** Xuất - Nhập dữ liệu hàng loạt bằng Excel (*Sắp triển khai*).
-* [ ] **Audit Logs:** Nhật ký thao tác hệ thống (*Sắp triển khai*).
-* [ ] **AI Assistant:** Trợ lý AI hỏi đáp tồn kho (*Sắp triển khai*).
+* [x] **Dashboard:** Thống kê tổng quan & Biểu đồ nhập xuất.
+* [x] **Export/Import Excel:** Xuất báo cáo ra file Excel (.xlsx) & Nhập dữ liệu hàng loạt.
+* [x] **Audit Logs:** Nhật ký vết thao tác hệ thống.
+* [x] **AI Assistant:** Trợ lý AI tư vấn và tra cứu dữ liệu tồn kho bằng Google Gemini.
 
 ---
 

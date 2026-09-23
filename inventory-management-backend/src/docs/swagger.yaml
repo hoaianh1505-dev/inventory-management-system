@@ -1,0 +1,1297 @@
+openapi: 3.0.3
+info:
+  title: Inventory Management System API
+  description: API tài liệu hoàn chỉnh cho Hệ thống Quản lý Kho Hàng (Inventory Management System).
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local Server (v1)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Thao tác thành công
+        data:
+          type: object
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Thông tin không hợp lệ
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    UserRole:
+      type: string
+      enum: [ADMIN, MANAGER, STAFF]
+
+    UserStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+
+    StockTransactionType:
+      type: string
+      enum: [IMPORT, EXPORT, TRANSFER, ADJUSTMENT]
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==========================================
+  # AUTH MODULE
+  # ==========================================
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Đăng ký tài khoản mới (Public)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, fullName, email]
+              properties:
+                username:
+                  type: string
+                  example: admin123
+                password:
+                  type: string
+                  example: Password123!
+                fullName:
+                  type: string
+                  example: Nguyễn Văn A
+                email:
+                  type: string
+                  example: admin@example.com
+                phone:
+                  type: string
+                  example: "0912345678"
+      responses:
+        201:
+          description: Đăng ký thành công
+        400:
+          description: Dữ liệu không hợp lệ hoặc Email/Username đã tồn tại
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Đăng nhập hệ thống
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  example: Admin123!
+      responses:
+        200:
+          description: Đăng nhập thành công, trả về Access Token & Refresh Token
+        401:
+          description: Tài khoản hoặc mật khẩu không chính xác
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Auth
+      summary: Làm mới Access Token bằng Refresh Token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        200:
+          description: Cấp Access Token mới thành công
+        401:
+          description: Refresh token hết hạn hoặc không hợp lệ
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Đăng xuất hệ thống
+      responses:
+        200:
+          description: Đăng xuất thành công
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Lấy thông tin tài khoản hiện tại
+      responses:
+        200:
+          description: Trả về thông tin chi tiết của User đang đăng nhập
+
+  /auth/profile:
+    put:
+      tags:
+        - Auth
+      summary: Cập nhật thông tin cá nhân
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        200:
+          description: Cập nhật thông tin thành công
+
+  /auth/change-password:
+    put:
+      tags:
+        - Auth
+      summary: Đổi mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        200:
+          description: Đổi mật khẩu thành công
+
+  # ==========================================
+  # USERS & ROLES MODULE
+  # ==========================================
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Lấy danh sách người dùng (Phân trang, Lọc, Tìm kiếm) - Admin
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: role
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+      responses:
+        200:
+          description: Danh sách người dùng
+    post:
+      tags:
+        - Users
+      summary: Tạo người dùng mới - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, fullName, email, role]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                fullName:
+                  type: string
+                email:
+                  type: string
+                role:
+                  $ref: '#/components/schemas/UserRole'
+                phone:
+                  type: string
+      responses:
+        201:
+          description: Tạo thành công
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Xem chi tiết người dùng - Admin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết người dùng
+    put:
+      tags:
+        - Users
+      summary: Cập nhật thông tin người dùng - Admin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                role:
+                  $ref: '#/components/schemas/UserRole'
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      tags:
+        - Users
+      summary: Xóa người dùng - Admin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  /users/{id}/status:
+    put:
+      tags:
+        - Users
+      summary: Thay đổi trạng thái người dùng (ACTIVE/INACTIVE) - Admin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/UserStatus'
+      responses:
+        200:
+          description: Cập nhật trạng thái thành công
+
+  /roles:
+    get:
+      tags:
+        - Roles
+      summary: Lấy danh sách các Vai trò trong hệ thống - Admin
+      responses:
+        200:
+          description: Danh sách Vai trò (ADMIN, MANAGER, STAFF)
+
+  # ==========================================
+  # CATEGORIES MODULE
+  # ==========================================
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Lấy danh sách danh mục sản phẩm
+      responses:
+        200:
+          description: Danh sách danh mục
+    post:
+      tags:
+        - Categories
+      summary: Tạo danh mục mới (Admin, Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        201:
+          description: Tạo danh mục thành công
+
+  /categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Xem chi tiết danh mục
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết danh mục
+    put:
+      tags:
+        - Categories
+      summary: Cập nhật danh mục (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        200:
+          description: Cập nhật danh mục thành công
+    delete:
+      tags:
+        - Categories
+      summary: Xóa danh mục (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa danh mục thành công
+
+  # ==========================================
+  # UNITS MODULE
+  # ==========================================
+  /units:
+    get:
+      tags:
+        - Units
+      summary: Lấy danh sách đơn vị tính
+      responses:
+        200:
+          description: Danh sách đơn vị tính
+    post:
+      tags:
+        - Units
+      summary: Tạo đơn vị tính mới (Admin, Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        201:
+          description: Tạo thành công
+
+  /units/{id}:
+    get:
+      tags:
+        - Units
+      summary: Xem chi tiết đơn vị tính
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết đơn vị tính
+    put:
+      tags:
+        - Units
+      summary: Cập nhật đơn vị tính (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      tags:
+        - Units
+      summary: Xóa đơn vị tính (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  # ==========================================
+  # SUPPLIERS MODULE
+  # ==========================================
+  /suppliers:
+    get:
+      tags:
+        - Suppliers
+      summary: Lấy danh sách nhà cung cấp (Phân trang, Tìm kiếm)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        200:
+          description: Danh sách nhà cung cấp
+    post:
+      tags:
+        - Suppliers
+      summary: Tạo nhà cung cấp mới (Admin, Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                contactName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+      responses:
+        201:
+          description: Tạo thành công
+
+  /suppliers/{id}:
+    get:
+      tags:
+        - Suppliers
+      summary: Xem chi tiết nhà cung cấp
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết nhà cung cấp
+    put:
+      tags:
+        - Suppliers
+      summary: Cập nhật nhà cung cấp (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                contactName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      tags:
+        - Suppliers
+      summary: Xóa nhà cung cấp (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  # ==========================================
+  # PRODUCTS MODULE
+  # ==========================================
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Lấy danh sách sản phẩm (Phân trang, Lọc danh mục/nhà cung cấp, Tìm kiếm SKU/tên)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+        - in: query
+          name: supplierId
+          schema:
+            type: string
+      responses:
+        200:
+          description: Danh sách sản phẩm
+    post:
+      tags:
+        - Products
+      summary: Tạo sản phẩm mới (Admin, Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku, name, categoryId, unitId, costPrice, sellingPrice]
+              properties:
+                sku:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: string
+                unitId:
+                  type: string
+                supplierId:
+                  type: string
+                costPrice:
+                  type: number
+                sellingPrice:
+                  type: number
+                minStockAlert:
+                  type: integer
+      responses:
+        201:
+          description: Tạo sản phẩm thành công
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Xem chi tiết sản phẩm
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết sản phẩm
+    put:
+      tags:
+        - Products
+      summary: Cập nhật sản phẩm (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: string
+                unitId:
+                  type: string
+                supplierId:
+                  type: string
+                costPrice:
+                  type: number
+                sellingPrice:
+                  type: number
+                minStockAlert:
+                  type: integer
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      tags:
+        - Products
+      summary: Xóa sản phẩm (Admin, Manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  # ==========================================
+  # WAREHOUSES MODULE
+  # ==========================================
+  /warehouses:
+    get:
+      tags:
+        - Warehouses
+      summary: Lấy danh sách kho hàng
+      responses:
+        200:
+          description: Danh sách kho hàng
+    post:
+      tags:
+        - Warehouses
+      summary: Tạo kho mới (Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name, address]
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                address:
+                  type: string
+                managerName:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        201:
+          description: Tạo thành công
+
+  /warehouses/{id}:
+    get:
+      tags:
+        - Warehouses
+      summary: Xem chi tiết kho hàng
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết kho hàng
+    put:
+      tags:
+        - Warehouses
+      summary: Cập nhật kho hàng (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                managerName:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      tags:
+        - Warehouses
+      summary: Xóa kho hàng (Admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Xóa thành công
+
+  # ==========================================
+  # STOCK TRANSACTIONS MODULE
+  # ==========================================
+  /stock-transactions:
+    get:
+      tags:
+        - Stock Transactions
+      summary: Lấy danh sách lịch sử giao dịch kho (Nhập/Xuất/Chuyển/Điều chỉnh)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: type
+          schema:
+            $ref: '#/components/schemas/StockTransactionType'
+        - in: query
+          name: warehouseId
+          schema:
+            type: string
+      responses:
+        200:
+          description: Danh sách giao dịch kho
+
+  /stock-transactions/{id}:
+    get:
+      tags:
+        - Stock Transactions
+      summary: Xem chi tiết đơn giao dịch kho
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết giao dịch
+
+  /stock-transactions/import:
+    post:
+      tags:
+        - Stock Transactions
+      summary: Tạo phiếu Nhập kho (Import)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [warehouseId, items]
+              properties:
+                warehouseId:
+                  type: string
+                supplierId:
+                  type: string
+                note:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity, price]
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+                      price:
+                        type: number
+      responses:
+        201:
+          description: Tạo phiếu nhập thành công
+
+  /stock-transactions/export:
+    post:
+      tags:
+        - Stock Transactions
+      summary: Tạo phiếu Xuất kho (Export)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [warehouseId, items]
+              properties:
+                warehouseId:
+                  type: string
+                note:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity, price]
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+                      price:
+                        type: number
+      responses:
+        201:
+          description: Tạo phiếu xuất thành công
+
+  /stock-transactions/transfer:
+    post:
+      tags:
+        - Stock Transactions
+      summary: Tạo phiếu Chuyển kho (Transfer giữa 2 kho)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fromWarehouseId, toWarehouseId, items]
+              properties:
+                fromWarehouseId:
+                  type: string
+                toWarehouseId:
+                  type: string
+                note:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        201:
+          description: Tạo phiếu chuyển kho thành công
+
+  /stock-transactions/adjustment:
+    post:
+      tags:
+        - Stock Transactions
+      summary: Điều chỉnh kiểm kê tồn kho (Adjustment - Admin/Manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [warehouseId, items]
+              properties:
+                warehouseId:
+                  type: string
+                note:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, actualQuantity]
+                    properties:
+                      productId:
+                        type: string
+                      actualQuantity:
+                        type: integer
+      responses:
+        201:
+          description: Kiểm kê điều chỉnh thành công
+
+  # ==========================================
+  # INVENTORY MODULE
+  # ==========================================
+  /inventory:
+    get:
+      tags:
+        - Inventory
+      summary: Tra cứu tồn kho theo Kho hàng & Sản phẩm
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: warehouseId
+          schema:
+            type: string
+        - in: query
+          name: productId
+          schema:
+            type: string
+      responses:
+        200:
+          description: Báo cáo tồn kho
+
+  /inventory/low-stock:
+    get:
+      tags:
+        - Inventory
+      summary: Danh sách sản phẩm cảnh báo sắp hết hàng (Low Stock Alert)
+      responses:
+        200:
+          description: Danh sách sản phẩm dưới định mức tồn tối thiểu
+
+  /inventory/summary:
+    get:
+      tags:
+        - Inventory
+      summary: Tổng quan số lượng tồn kho & Giá trị tài sản hàng tồn
+      responses:
+        200:
+          description: Báo cáo tổng số lượng và giá trị kho
+
+  # ==========================================
+  # DASHBOARD MODULE
+  # ==========================================
+  /dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: Các chỉ số KPI tổng quan (Tổng SP, Tổng kho, Doanh số, Cảnh báo tồn)
+      responses:
+        200:
+          description: Thống kê KPI tổng quan
+
+  /dashboard/chart/monthly-transactions:
+    get:
+      tags:
+        - Dashboard
+      summary: Biểu đồ biến động Nhập - Xuất theo tháng
+      responses:
+        200:
+          description: Dữ liệu biểu đồ tháng
+
+  /dashboard/chart/top-products:
+    get:
+      tags:
+        - Dashboard
+      summary: Top 5 sản phẩm xuất kho nhiều nhất
+      responses:
+        200:
+          description: Dữ liệu top sản phẩm
+
+  /dashboard/chart/stock-value-by-category:
+    get:
+      tags:
+        - Dashboard
+      summary: Biểu đồ tỷ trọng giá trị hàng tồn theo Danh mục
+      responses:
+        200:
+          description: Dữ liệu phân bổ tài sản kho
+
+  # ==========================================
+  # EXCEL MODULE
+  # ==========================================
+  /excel/template/products:
+    get:
+      tags:
+        - Excel
+      summary: Tải file Excel mẫu dùng để nhập danh sách sản phẩm
+      responses:
+        200:
+          description: File Excel .xlsx mẫu
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /excel/export/products:
+    get:
+      tags:
+        - Excel
+      summary: Xuất danh sách toàn bộ sản phẩm ra file Excel
+      responses:
+        200:
+          description: File Excel danh sách sản phẩm
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /excel/export/inventory:
+    get:
+      tags:
+        - Excel
+      summary: Xuất báo cáo tồn kho ra file Excel
+      responses:
+        200:
+          description: File Excel tồn kho
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /excel/export/stock-transactions:
+    get:
+      tags:
+        - Excel
+      summary: Xuất báo cáo lịch sử giao dịch kho ra file Excel
+      responses:
+        200:
+          description: File Excel giao dịch kho
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /excel/import/products:
+    post:
+      tags:
+        - Excel
+      summary: Nhập hàng loạt sản phẩm từ file Excel (Admin, Manager)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Kết quả import (Số bản ghi thành công / Thất bại)
+
+  # ==========================================
+  # AUDIT LOGS MODULE
+  # ==========================================
+  /audit-logs:
+    get:
+      tags:
+        - Audit Logs
+      summary: Xem nhật ký hệ thống Audit Logs (Admin only)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: userId
+          schema:
+            type: string
+      responses:
+        200:
+          description: Danh sách nhật ký hoạt động
+
+  /audit-logs/{id}:
+    get:
+      tags:
+        - Audit Logs
+      summary: Xem chi tiết 1 nhật ký hoạt động (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Chi tiết nhật ký
+
+  # ==========================================
+  # AI ASSISTANT MODULE
+  # ==========================================
+  /ai/chat:
+    post:
+      tags:
+        - AI Assistant
+      summary: Trò chuyện và trợ lý thông minh với Gemini AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  example: Cho tôi biết tình hình tồn kho và các sản phẩm sắp hết hàng?
+      responses:
+        200:
+          description: Câu phản hồi từ AI Assistant
+
+  /ai/suggestions:
+    get:
+      tags:
+        - AI Assistant
+      summary: Gợi ý thông minh từ AI (Dự báo hàng tồn, sản phẩm cần nhập thêm)
+      responses:
+        200:
+          description: Danh sách đề xuất và cảnh báo từ AI

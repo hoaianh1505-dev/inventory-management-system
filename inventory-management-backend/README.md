@@ -29,10 +29,10 @@ Hệ thống Backend RESTful API Quản lý Tồn kho chuyên nghiệp, được
 | 7 | **Warehouses** | Quản lý Nhà kho & Vị trí kho chi tiết (Kệ, Hàng) | ✅ Done |
 | 8 | **Stock Transactions** | Nhập kho, Xuất kho, Chuyển kho giữa các vị trí/nhà kho (Sử dụng DB Transaction) | ✅ Done |
 | 9 | **Inventory** | Tra cứu số lượng tồn kho thực tế, Cảnh báo tồn kho thấp (`low-stock`), Tồn kho theo từng sản phẩm | ✅ Done |
-| 10 | **Dashboard** | Thống kê tổng quan, Biểu đồ nhập xuất & Báo cáo doanh số | 🔄 Next |
-| 11 | **Export / Import** | Xuất báo cáo ra file Excel (.xlsx) & Nhập dữ liệu hàng loạt | 🔄 Next |
-| 12 | **Audit Logs** | Nhật ký vết lịch sử thao tác hệ thống | 🔄 Next |
-| 13 | **AI Assistant** | Trợ lý AI tư vấn và tra cứu dữ liệu tồn kho bằng giọng văn tự nhiên | 🔄 Next |
+| 10 | **Dashboard** | Thống kê tổng quan, Biểu đồ nhập xuất & Báo cáo doanh số | ✅ Done |
+| 11 | **Export / Import** | Xuất báo cáo ra file Excel (.xlsx) & Nhập dữ liệu hàng loạt | ✅ Done |
+| 12 | **Audit Logs** | Nhật ký vết lịch sử thao tác hệ thống | ✅ Done |
+| 13 | **AI Assistant** | Trợ lý AI tư vấn và tra cứu dữ liệu tồn kho bằng Google Gemini | ✅ Done |
 
 ---
 
