@@ -13,6 +13,8 @@ import {
   uploadProductImagesService,
   deleteProductImageService,
   setPrimaryProductImageService,
+  getProductBarcodeService,
+  getProductBySkuService,
 } from "../services/product.service";
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
@@ -116,6 +118,32 @@ export const setPrimaryImage = async (req: Request, res: Response, next: NextFun
     return res.status(200).json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductBarcode = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const result = await getProductBarcodeService(id);
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductBySku = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sku } = req.params;
+    const product = await getProductBySkuService(sku);
+    return res.status(200).json({
+      success: true,
+      data: product,
     });
   } catch (error) {
     next(error);

@@ -780,6 +780,37 @@ paths:
         200:
           description: Xóa thành công
 
+  /products/sku/{sku}:
+    get:
+      tags:
+        - Products
+      summary: Tra cứu thông tin sản phẩm bằng máy quét Mã vạch / QR Code (bằng SKU)
+      parameters:
+        - in: path
+          name: sku
+          required: true
+          schema:
+            type: string
+            example: LAP-DELL-XPS13
+      responses:
+        200:
+          description: Trả về thông tin chi tiết sản phẩm kèm chuỗi Base64 Data URL của Barcode và QR Code
+
+  /products/{id}/barcode:
+    get:
+      tags:
+        - Products
+      summary: Sinh ảnh Mã vạch Barcode (Code128) & QR Code dùng để in tem nhãn sản phẩm
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trả về chuỗi Base64 Data URL hình ảnh Barcode & QR Code sẵn sàng hiển thị và in ấn
+
   # ==========================================
   # WAREHOUSES MODULE
   # ==========================================

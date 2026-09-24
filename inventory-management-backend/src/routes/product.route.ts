@@ -8,6 +8,8 @@ import {
   uploadImages,
   deleteImage,
   setPrimaryImage,
+  getProductBarcode,
+  getProductBySku,
 } from "../controllers/product.controller";
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
@@ -18,6 +20,8 @@ const router = Router();
 router.use(authenticateJWT);
 
 router.get("/", authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF), getProducts);
+router.get("/sku/:sku", authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF), getProductBySku);
+router.get("/:id/barcode", authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF), getProductBarcode);
 router.get("/:id", authorizeRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF), getProductById);
 
 router.post("/", authorizeRoles(UserRole.ADMIN, UserRole.MANAGER), createProduct);

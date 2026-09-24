@@ -8,6 +8,7 @@ import {
 } from "../validations/product.validation";
 import { AppError } from "../utils/appError.util";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/s3.util";
+import { generateBarcodeBase64, generateQrCodeBase64 } from "../utils/barcode.util";
 
 const productRepository = AppDataSource.getRepository(Product);
 const productImageRepository = AppDataSource.getRepository(ProductImage);
@@ -241,4 +242,58 @@ export const setPrimaryProductImageService = async (productId: string, imageId: 
 
   await productImageRepository.save(images);
   return { message: "Đặt ảnh đại diện sản phẩm thành công" };
+};
+
+export const getProductBarcodeService = async (productId: string) => {
+  const product = await productRepository.findOne({
+    where: { id: productId },
+    relations: ["category", "unit", "supplier"],
+  });
+
+  if (!product) {
+    throw new AppError("Không tìm thấy sản phẩm", 404, "NOT_FOUND");
+  }
+
+  const barcodeText = product.barcode || product.sku;
+  const barcodeBase64 = await generateBarcodeBase64(barcodeText);
+  const qrCodeBase64 = await generateQrCodeBase64(product.sku);
+
+  return {
+    product: {
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      barcode: product.barcode,
+      category: product.category,
+      unit: product.unit,
+      supplier: product.supplier,
+      cost_price: product.cost_price,
+      selling_price: product.selling_price,
+      low_stock_threshold: product.low_stock_threshold,
+    },
+    barcodeText,
+    barcodeBase64,
+    qrCodeBase64,
+  };
+};
+
+export const getProductBySkuService = async (sku: string) => {
+  const product = await productRepository.findOne({
+    where: [{ sku }, { barcode: sku }],
+    relations: ["category", "unit", "supplier", "images"],
+  });
+
+  if (!product) {
+    throw new AppError(`Không tìm thấy sản phẩm với mã SKU/Barcode: ${sku}`, 404, "NOT_FOUND");
+  }
+
+  const barcodeText = product.barcode || product.sku;
+  const barcodeBase64 = await generateBarcodeBase64(barcodeText);
+  const qrCodeBase64 = await generateQrCodeBase64(product.sku);
+
+  return {
+    ...product,
+    barcodeBase64,
+    qrCodeBase64,
+  };
 };
