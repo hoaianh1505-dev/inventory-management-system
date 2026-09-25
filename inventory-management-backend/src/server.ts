@@ -1,3 +1,4 @@
+import http from "http";
 import fs from "fs";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
@@ -12,11 +13,16 @@ import { corsOptions, globalRateLimiter } from "./config/security.config";
 import routes from "./routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import { seedInitialAdmin } from "./services/auth.service";
+import { initSocket } from "./config/socket.config";
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
+const httpServer = http.createServer(app);
+
+// Initialize Socket.io Realtime Notifications Server
+initSocket(httpServer);
 
 const swaggerPath = fs.existsSync(path.join(__dirname, "docs/swagger.yaml"))
   ? path.join(__dirname, "docs/swagger.yaml")
@@ -46,8 +52,8 @@ const startServer = async () => {
   try {
     await AppDataSource.initialize();
     await seedInitialAdmin();
-    app.listen(PORT, () => {
-      console.log(`Server running on address http://localhost:${PORT}`);
+    httpServer.listen(PORT, () => {
+      console.log(`Server running with Realtime WebSocket support on http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("Server start error:", error);

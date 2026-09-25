@@ -1326,3 +1326,74 @@ paths:
       responses:
         200:
           description: Danh sách đề xuất và cảnh báo từ AI
+
+  # ==========================================
+  # REALTIME NOTIFICATIONS MODULE (Socket.io)
+  # ==========================================
+  /notifications/broadcast:
+    post:
+      tags:
+        - Realtime Notifications
+      summary: Phát thông báo Realtime tới toàn bộ hệ thống qua WebSocket
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, message]
+              properties:
+                title:
+                  type: string
+                  example: "📢 BẢO TRÌ HỆ THỐNG DỰ KIẾN"
+                message:
+                  type: string
+                  example: "Hệ thống sẽ bảo trì nhẹ vào lúc 23:00 tối nay. Vui lòng hoàn thành các giao dịch."
+                type:
+                  type: string
+                  enum: [INFO, SUCCESS, WARNING, DANGER, STOCK_TRANSACTION, LOW_STOCK]
+                  example: "WARNING"
+                targetRoom:
+                  type: string
+                  example: "global_room"
+      responses:
+        200:
+          description: Phát thông báo thành công
+
+  /notifications/test-alert:
+    post:
+      tags:
+        - Realtime Notifications
+      summary: Bắn thử nghiệm cảnh báo Realtime (Low Stock / Stock Transaction / General)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alertType:
+                  type: string
+                  enum: [general, low_stock, stock_transaction]
+                  example: "low_stock"
+                customMessage:
+                  type: string
+                  example: "Thông báo thử nghiệm kết nối WebSocket Realtime!"
+      responses:
+        200:
+          description: Gửi cảnh báo thử nghiệm thành công
+
+  /notifications/status:
+    get:
+      tags:
+        - Realtime Notifications
+      summary: Trạng thái Server WebSocket Socket.io (Số lượng client đang kết nối)
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thông tin trạng thái WebSocket server
+

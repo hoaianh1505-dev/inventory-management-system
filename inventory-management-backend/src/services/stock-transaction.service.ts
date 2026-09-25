@@ -11,6 +11,7 @@ import {
   TransferStockInput,
   AdjustStockInput,
 } from "../validations/stock-transaction.validation";
+import { emitStockTransactionNotification } from "../config/socket.config";
 
 export const importStockService = async (userId: string, data: ImportStockInput) => {
   return AppDataSource.manager.transaction(async (entityManager) => {
@@ -58,12 +59,20 @@ export const importStockService = async (userId: string, data: ImportStockInput)
       }
     }
 
-    return stockTransaction;
+    const result = stockTransaction;
+    emitStockTransactionNotification({
+      transactionId: result.id,
+      type: "IMPORT",
+      warehouseId: data.warehouse_id,
+      referenceNo: data.reference_no ?? undefined,
+      itemsCount: data.items.length,
+    });
+    return result;
   });
 };
 
 export const exportStockService = async (userId: string, data: ExportStockInput) => {
-  return AppDataSource.manager.transaction(async (entityManager) => {
+  const result = await AppDataSource.manager.transaction(async (entityManager) => {
     const stockTransaction = entityManager.create(StockTransaction, {
       type: TransactionType.EXPORT,
       warehouse_id: data.warehouse_id,
@@ -106,10 +115,20 @@ export const exportStockService = async (userId: string, data: ExportStockInput)
 
     return stockTransaction;
   });
+
+  emitStockTransactionNotification({
+    transactionId: result.id,
+    type: "EXPORT",
+    warehouseId: data.warehouse_id,
+    referenceNo: data.reference_no ?? undefined,
+    itemsCount: data.items.length,
+  });
+
+  return result;
 };
 
 export const transferStockService = async (userId: string, data: TransferStockInput) => {
-  return AppDataSource.manager.transaction(async (entityManager) => {
+  const result = await AppDataSource.manager.transaction(async (entityManager) => {
     const stockTransaction = entityManager.create(StockTransaction, {
       type: TransactionType.TRANSFER,
       warehouse_id: data.warehouse_id,
@@ -170,10 +189,20 @@ export const transferStockService = async (userId: string, data: TransferStockIn
 
     return stockTransaction;
   });
+
+  emitStockTransactionNotification({
+    transactionId: result.id,
+    type: "TRANSFER",
+    warehouseId: data.warehouse_id,
+    referenceNo: data.reference_no ?? undefined,
+    itemsCount: data.items.length,
+  });
+
+  return result;
 };
 
 export const adjustStockService = async (userId: string, data: AdjustStockInput) => {
-  return AppDataSource.manager.transaction(async (entityManager) => {
+  const result = await AppDataSource.manager.transaction(async (entityManager) => {
     const stockTransaction = entityManager.create(StockTransaction, {
       type: TransactionType.ADJUSTMENT,
       warehouse_id: data.warehouse_id,
@@ -221,6 +250,16 @@ export const adjustStockService = async (userId: string, data: AdjustStockInput)
 
     return stockTransaction;
   });
+
+  emitStockTransactionNotification({
+    transactionId: result.id,
+    type: "ADJUSTMENT",
+    warehouseId: data.warehouse_id,
+    referenceNo: data.reference_no ?? undefined,
+    itemsCount: data.items.length,
+  });
+
+  return result;
 };
 
 export const getTransactionsService = async (options: {
