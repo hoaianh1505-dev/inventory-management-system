@@ -12,15 +12,16 @@ export const seedInitialAdmin = async (): Promise<void> => {
     const userCount = await userRepository.count();
     if (userCount === 0) {
       const hashedPassword = await hashPassword("admin123");
-      const adminUser = userRepository.create({
+      await userRepository.save({
         username: "admin",
         password: hashedPassword,
+        display_name: "Super Admin",
+        phone: "0901234567",
         email: "admin@company.com",
         role: UserRole.ADMIN,
         must_change_password: false,
         is_active: true,
       });
-      await userRepository.save(adminUser);
       console.log("[SEED] Da tao tai khoan Super Admin mac dinh (username: admin, password: admin123)");
     }
   } catch (error) {
@@ -49,6 +50,8 @@ export const loginService = async (input: LoginInput) => {
   return {
     id: user.id,
     username: user.username,
+    display_name: user.display_name,
+    phone: user.phone,
     email: user.email,
     avatar: user.avatar,
     role: user.role,
@@ -59,7 +62,7 @@ export const loginService = async (input: LoginInput) => {
 export const getMeService = async (userId: string) => {
   const user = await userRepository.findOne({
     where: { id: userId },
-    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "display_name", "phone", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
   });
 
   if (!user) {
@@ -105,6 +108,8 @@ export const updateProfileService = async (
     throw new AppError("Người dùng không tồn tại", 404, "NOT_FOUND");
   }
 
+  if (input.display_name !== undefined) user.display_name = input.display_name || null;
+  if (input.phone !== undefined) user.phone = input.phone || null;
   if (input.email !== undefined) user.email = input.email || null;
   if (input.avatar !== undefined) user.avatar = input.avatar || null;
 
@@ -113,6 +118,8 @@ export const updateProfileService = async (
   return {
     id: user.id,
     username: user.username,
+    display_name: user.display_name,
+    phone: user.phone,
     email: user.email,
     avatar: user.avatar,
     role: user.role,

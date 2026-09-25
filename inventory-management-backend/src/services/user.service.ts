@@ -8,6 +8,7 @@ import {
 } from "../validations/user.validation";
 import { ILike } from "typeorm";
 import { AppError } from "../utils/appError.util";
+import { sendNewUserEmail, sendResetPasswordEmail } from "../utils/mail.util";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -23,8 +24,10 @@ export const createUserService = async (input: CreateUserInput) => {
   const tempPassword = generateTempPassword(8);
   const hashedPassword = await hashPassword(tempPassword);
 
-  const newUser = userRepository.create({
+  const newUser = await userRepository.save({
     username: input.username,
+    display_name: input.display_name || null,
+    phone: input.phone || null,
     email: input.email || null,
     avatar: input.avatar || null,
     password: hashedPassword,
@@ -33,12 +36,21 @@ export const createUserService = async (input: CreateUserInput) => {
     is_active: true,
   });
 
-  await userRepository.save(newUser);
+  if (newUser.email) {
+    sendNewUserEmail({
+      to: newUser.email,
+      username: newUser.username,
+      tempPassword,
+      displayName: newUser.display_name,
+    }).catch((err) => console.error("[MAIL_ERROR] Failed to send new user email:", err));
+  }
 
   return {
     user: {
       id: newUser.id,
       username: newUser.username,
+      display_name: newUser.display_name,
+      phone: newUser.phone,
       email: newUser.email,
       avatar: newUser.avatar,
       role: newUser.role,
@@ -70,7 +82,7 @@ export const getUsersService = async (query: QueryUserInput) => {
 
   const [users, total] = await userRepository.findAndCount({
     where: whereClause,
-    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "display_name", "phone", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
     order: { created_at: "DESC" },
     skip,
     take: limit,
@@ -89,7 +101,7 @@ export const getUsersService = async (query: QueryUserInput) => {
 export const getUserByIdService = async (id: string) => {
   const user = await userRepository.findOne({
     where: { id },
-    select: ["id", "username", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
+    select: ["id", "username", "display_name", "phone", "email", "avatar", "role", "must_change_password", "is_active", "created_at"],
   });
 
   if (!user) {
@@ -108,6 +120,8 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
     throw new AppError("Không tìm thấy người dùng", 404, "NOT_FOUND");
   }
 
+  if (input.display_name !== undefined) user.display_name = input.display_name || null;
+  if (input.phone !== undefined) user.phone = input.phone || null;
   if (input.email !== undefined) user.email = input.email || null;
   if (input.avatar !== undefined) user.avatar = input.avatar || null;
   if (input.role !== undefined) user.role = input.role;
@@ -118,6 +132,8 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
   return {
     id: user.id,
     username: user.username,
+    display_name: user.display_name,
+    phone: user.phone,
     email: user.email,
     avatar: user.avatar,
     role: user.role,
@@ -140,6 +156,14 @@ export const resetPasswordService = async (id: string) => {
   user.must_change_password = true;
 
   await userRepository.save(user);
+
+  if (user.email) {
+    sendResetPasswordEmail({
+      to: user.email,
+      username: user.username,
+      tempPassword: newTempPassword,
+    }).catch((err) => console.error("[MAIL_ERROR] Failed to send reset password email:", err));
+  }
 
   return {
     message: "Reset mật khẩu thành công",

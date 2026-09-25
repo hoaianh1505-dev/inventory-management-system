@@ -13,6 +13,7 @@ import excelRouter from "./excel.route";
 import auditLogRouter from "./audit-log.route";
 import aiAssistantRouter from "./ai-assistant.route";
 import notificationRouter from "./notification.route";
+import mailRouter from "./mail.route";
 import { getRoles } from "../controllers/user.controller";
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware";
 import { UserRole } from "../constants";
@@ -34,6 +35,7 @@ apiV1Router.use("/excel", excelRouter);
 apiV1Router.use("/audit-logs", auditLogRouter);
 apiV1Router.use("/ai", aiAssistantRouter);
 apiV1Router.use("/notifications", notificationRouter);
+apiV1Router.use("/mail", mailRouter);
 apiV1Router.get("/roles", authenticateJWT, authorizeRoles(UserRole.ADMIN), getRoles);
 
 router.use("/api/v1", apiV1Router);

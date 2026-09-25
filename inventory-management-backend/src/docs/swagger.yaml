@@ -1397,3 +1397,78 @@ paths:
         200:
           description: Thông tin trạng thái WebSocket server
 
+  # ==========================================
+  # EMAIL MANAGEMENT MODULE
+  # ==========================================
+  /mail/send-individual:
+    post:
+      tags:
+        - Email Management
+      summary: Gửi Email thông báo cá nhân tới 1 nhân viên cụ thể (Admin/Manager)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, message]
+              properties:
+                user_id:
+                  type: string
+                  example: "c1f7a0e8-9b88-4a1e-8e42-123456789abc"
+                email:
+                  type: string
+                  example: "nhanvien@company.com"
+                subject:
+                  type: string
+                  example: "📋 Thông báo phân công ca trực kho cuối tuần"
+                message:
+                  type: string
+                  example: "Chào bạn, bạn đã được phân công hỗ trợ kiểm kê kho tại Kho Hà Nội vào Thứ 7 tuần này."
+      responses:
+        200:
+          description: Gửi email thành công
+
+  /mail/broadcast:
+    post:
+      tags:
+        - Email Management
+      summary: Gửi Email thông báo hàng loạt tới Nhân viên theo Nhóm/Role (Admin/Manager)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, message]
+              properties:
+                target_role:
+                  type: string
+                  enum: [ALL, ADMIN, MANAGER, STAFF]
+                  example: "STAFF"
+                subject:
+                  type: string
+                  example: "📢 THÔNG BÁO LỊCH NGHỈ LỄ HỆ THỐNG KHO"
+                message:
+                  type: string
+                  example: "Toàn bộ kho hàng sẽ tạm ngưng nhập/xuất kho vào ngày nghỉ lễ quốc gia."
+      responses:
+        200:
+          description: Phát email thông báo hàng loạt thành công
+
+  /mail/status:
+    get:
+      tags:
+        - Email Management
+      summary: Kiểm tra trạng thái kết nối tới Mail Server SMTP
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Thông tin kết nối SMTP Mail Server
+
+

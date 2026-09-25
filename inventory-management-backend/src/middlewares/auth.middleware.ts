@@ -9,24 +9,29 @@ export const authenticateJWT = (
   next: NextFunction
 ) => {
   try {
-    let token = req.cookies?.access_token;
+    const bearerToken = req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : undefined;
 
-    if (!token && req.headers.authorization) {
-      const authHeader = req.headers.authorization;
-      if (authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
+    const token = req.cookies?.access_token || bearerToken;
 
     if (!token) {
-      return next(new AppError("Chưa đăng nhập hoặc phiên đăng nhập hết hạn", 401, "UNAUTHORIZED"));
+      return next(
+        new AppError(
+          "Chưa đăng nhập hoặc phiên đăng nhập hết hạn",
+          401,
+          "UNAUTHORIZED"
+        )
+      );
     }
 
     const decoded = verifyAccessToken(token);
     req.user = decoded;
     next();
   } catch (err) {
-    return next(new AppError("Token không hợp lệ hoặc đã hết hạn", 401, "UNAUTHORIZED"));
+    return next(
+      new AppError("Token không hợp lệ hoặc đã hết hạn", 401, "UNAUTHORIZED")
+    );
   }
 };
 
@@ -37,7 +42,9 @@ export const authorizeRoles = (...roles: UserRole[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
-      return next(new AppError("Bạn không có quyền thực hiện thao tác này", 403, "FORBIDDEN"));
+      return next(
+        new AppError("Bạn không có quyền thực hiện thao tác này", 403, "FORBIDDEN")
+      );
     }
 
     next();

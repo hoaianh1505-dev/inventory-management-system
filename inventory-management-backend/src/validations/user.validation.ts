@@ -3,12 +3,16 @@ import { UserRole } from "../constants";
 
 export const createUserSchema = z.object({
   username: z.string().min(3, "Tên đăng nhập phải có ít nhất 3 ký tự"),
+  display_name: z.string().max(100, "Tên hiển thị tối đa 100 ký tự").optional().or(z.literal("")),
+  phone: z.string().max(20, "Số điện thoại tối đa 20 ký tự").optional().or(z.literal("")),
   email: z.string().email("Email không đúng định dạng").optional().or(z.literal("")),
   role: z.nativeEnum(UserRole).default(UserRole.STAFF),
   avatar: z.string().url("URL ảnh đại diện không hợp lệ").optional().or(z.literal("")),
 });
 
 export const updateUserSchema = z.object({
+  display_name: z.string().max(100, "Tên hiển thị tối đa 100 ký tự").optional().or(z.literal("")),
+  phone: z.string().max(20, "Số điện thoại tối đa 20 ký tự").optional().or(z.literal("")),
   email: z.string().email("Email không đúng định dạng").optional().or(z.literal("")),
   role: z.nativeEnum(UserRole).optional(),
   is_active: z.boolean().optional(),

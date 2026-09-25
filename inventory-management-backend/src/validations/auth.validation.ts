@@ -11,6 +11,8 @@ export const changePasswordSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
+  display_name: z.string().max(100, "Tên hiển thị tối đa 100 ký tự").optional().or(z.literal("")),
+  phone: z.string().max(20, "Số điện thoại tối đa 20 ký tự").optional().or(z.literal("")),
   email: z.string().email("Email không đúng định dạng").optional().or(z.literal("")),
   avatar: z.string().url("URL ảnh đại diện không hợp lệ").optional().or(z.literal("")),
 });
