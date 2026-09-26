@@ -9,6 +9,8 @@ import {
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
+import { appEvents, SYSTEM_EVENTS } from "../utils/events.util";
+
 dotenv.config();
 
 const smtpHost = process.env.EMAIL_HOST || process.env.SMTP_HOST || "smtp.gmail.com";
@@ -28,6 +30,34 @@ const transporter = nodemailer.createTransport({
           pass: smtpPass,
         }
       : undefined,
+});
+
+// Event Listener: Tự động gửi Email chào mừng khi có Event USER_CREATED
+appEvents.on(SYSTEM_EVENTS.USER_CREATED, async (data: { email?: string; username: string; tempPassword: string; displayName?: string }) => {
+  if (!data.email) return;
+  try {
+    await sendIndividualMailService({
+      email: data.email,
+      subject: "🔑 [Hệ thống IMS] Thông tin Tài khoản & Mật khẩu khởi tạo",
+      message: `Tài khoản của bạn trên hệ thống IMS đã được tạo thành công.\n\nTên đăng nhập: ${data.username}\nMật khẩu tạm thời: ${data.tempPassword}\n\nVui lòng đăng nhập và đổi mật khẩu ở lần sử dụng đầu tiên.`,
+    });
+  } catch (err) {
+    console.error("[EVENT_MAIL_ERROR] Failed to send user.created email:", err);
+  }
+});
+
+// Event Listener: Tự động gửi Email khi có Event PASSWORD_RESET
+appEvents.on(SYSTEM_EVENTS.PASSWORD_RESET, async (data: { email?: string; username: string; tempPassword: string }) => {
+  if (!data.email) return;
+  try {
+    await sendIndividualMailService({
+      email: data.email,
+      subject: "🔄 [Hệ thống IMS] Đặt lại Mật khẩu Tài khoản",
+      message: `Mật khẩu tài khoản ${data.username} của bạn vừa được Admin đặt lại.\n\nMật khẩu tạm mới: ${data.tempPassword}\n\nVui lòng đăng nhập và đổi mật khẩu mới.`,
+    });
+  } catch (err) {
+    console.error("[EVENT_MAIL_ERROR] Failed to send password_reset email:", err);
+  }
 });
 
 const userRepository = AppDataSource.getRepository(User);

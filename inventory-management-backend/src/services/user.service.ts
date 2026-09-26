@@ -8,7 +8,7 @@ import {
 } from "../validations/user.validation";
 import { ILike } from "typeorm";
 import { AppError } from "../utils/appError.util";
-import { sendNewUserEmail, sendResetPasswordEmail } from "../utils/mail.util";
+import { appEvents, SYSTEM_EVENTS } from "../utils/events.util";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -37,12 +37,12 @@ export const createUserService = async (input: CreateUserInput) => {
   });
 
   if (newUser.email) {
-    sendNewUserEmail({
-      to: newUser.email,
+    appEvents.emit(SYSTEM_EVENTS.USER_CREATED, {
+      email: newUser.email,
       username: newUser.username,
       tempPassword,
       displayName: newUser.display_name,
-    }).catch((err) => console.error("[MAIL_ERROR] Failed to send new user email:", err));
+    });
   }
 
   return {
@@ -158,11 +158,11 @@ export const resetPasswordService = async (id: string) => {
   await userRepository.save(user);
 
   if (user.email) {
-    sendResetPasswordEmail({
-      to: user.email,
+    appEvents.emit(SYSTEM_EVENTS.PASSWORD_RESET, {
+      email: user.email,
       username: user.username,
       tempPassword: newTempPassword,
-    }).catch((err) => console.error("[MAIL_ERROR] Failed to send reset password email:", err));
+    });
   }
 
   return {
